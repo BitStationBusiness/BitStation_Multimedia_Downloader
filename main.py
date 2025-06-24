@@ -18,17 +18,12 @@ from PyQt6.QtWidgets import (
 
 # --- FUNCIÓN PARA LEER LA VERSIÓN ACTUAL ---
 def get_current_version():
-    """
-    Lee la versión actual desde version.txt. Si no existe,
-    lo crea con la versión inicial "0.0".
-    """
     try:
         with open("version.txt", "r") as f:
             version = f.read().strip()
-            if not version: return "0.0" # Si el archivo está vacío
+            if not version: return "0.0"
             return version
     except FileNotFoundError:
-        # Si el archivo no existe, es la primera ejecución.
         with open("version.txt", "w") as f:
             f.write("0.0")
         return "0.0"
@@ -97,7 +92,6 @@ class UpdateCheckerWorker(QObject):
             response.raise_for_status()
             data = response.json()
             latest_version = data['tag_name'].lstrip('v')
-            # Usar una librería de comparación de versiones sería más robusto, pero esto funciona para números simples
             if float(latest_version) > float(APP_VERSION):
                 update_info['update_available'] = True
                 update_info['latest_version'] = latest_version
@@ -185,18 +179,46 @@ class MainWindow(QMainWindow):
         
     def setup_ui(self):
         central_widget = QWidget(); self.setCentralWidget(central_widget); main_layout = QVBoxLayout(central_widget)
-        top_controls_layout = QHBoxLayout(); self.settings_button = QPushButton("⚙️"); font_settings = QFont(); font_settings.setPointSize(16)
-        self.settings_button.setFont(font_settings); self.settings_button.setFixedSize(QSize(40, 40))
-        self.prompt_label = QLabel("¿Qué desea descargar?"); self.download_mode_button = QPushButton(self.download_modes[self.current_download_mode_index])
-        top_controls_layout.addWidget(self.settings_button); top_controls_layout.addWidget(self.prompt_label); top_controls_layout.addStretch(); top_controls_layout.addWidget(self.download_mode_button)
-        search_layout = QHBoxLayout(); self.search_bar = QLineEdit(); self.search_bar.setPlaceholderText("Pega uno o más links aquí (Ctrl+V)..."); self.search_bar.setMinimumHeight(35)
+        
+        # --- Layout Superior (Controles) ---
+        top_controls_layout = QHBoxLayout()
+        self.settings_button = QPushButton("⚙️")
+        font_settings = QFont(); font_settings.setPointSize(16)
+        self.settings_button.setFont(font_settings)
+        self.settings_button.setFixedSize(QSize(40, 40))
+        
+        self.download_mode_button = QPushButton(self.download_modes[self.current_download_mode_index])
+        
+        top_controls_layout.addWidget(self.settings_button)
+        top_controls_layout.addStretch() # Empuja el siguiente botón a la derecha
+        top_controls_layout.addWidget(self.download_mode_button)
+        
+        # --- Etiqueta Principal (CENTRADA Y MÁS GRANDE) ---
+        self.prompt_label = QLabel("¿Qué desea descargar?")
+        font_prompt = QFont()
+        font_prompt.setPointSize(18)
+        self.prompt_label.setFont(font_prompt)
+        self.prompt_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.prompt_label.setContentsMargins(0, 10, 0, 10) # Añade un poco de espacio vertical
+
+        # --- Layout de Búsqueda (Barra y botón de descarga) ---
+        search_layout = QHBoxLayout()
+        self.search_bar = QLineEdit(); self.search_bar.setPlaceholderText("Pega uno o más links aquí (Ctrl+V)..."); self.search_bar.setMinimumHeight(35)
         self.master_download_button = QPushButton(); self.master_download_button.setFixedSize(QSize(40, 35)); self.update_master_download_icon()
         search_layout.addWidget(self.search_bar); search_layout.addWidget(self.master_download_button)
+
+        # --- Tabla de Descargas ---
         self.table = QTableWidget(); self.table.setColumnCount(6); self.table.setHorizontalHeaderLabels(['#', 'Link', 'Estado', 'Formato', 'Resolución', 'Eliminar'])
         header = self.table.horizontalHeader(); header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents); header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents); header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents); header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.setSelectionMode(QTableWidget.SelectionMode.NoSelection); main_layout.addLayout(top_controls_layout); main_layout.addLayout(search_layout); main_layout.addWidget(self.table)
+        self.table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
+
+        # --- Añadir todos los layouts al layout principal ---
+        main_layout.addLayout(top_controls_layout)
+        main_layout.addWidget(self.prompt_label) # Añadido al layout principal
+        main_layout.addLayout(search_layout)
+        main_layout.addWidget(self.table)
 
     def setup_connections(self):
         self.search_bar.textChanged.connect(self.handle_paste); self.download_mode_button.clicked.connect(self.toggle_download_mode)
