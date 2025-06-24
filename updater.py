@@ -50,14 +50,14 @@ def main():
                 continue
                 
             try:
+                # Si el archivo ya existe en el destino, lo eliminamos primero
                 if os.path.exists(target_path):
-                    # Para archivos, simplemente reemplazamos. Para carpetas, es más complejo,
-                    # pero aquí asumimos que son archivos.
                     os.remove(target_path)
                 shutil.move(source_path, target_path)
                 print(f" - '{filename}' actualizado.")
             except Exception as e:
                 print(f"  -> Error al reemplazar '{filename}': {e}")
+
 
         print("\nArchivos actualizados. Reiniciando la aplicación...")
         

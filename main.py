@@ -108,7 +108,7 @@ class SettingsWindow(QDialog):
         caracteristicas_label = QLabel("Características:"); font_caracteristicas = QFont(); font_caracteristicas.setBold(True); caracteristicas_label.setFont(font_caracteristicas)
         ram_label = QLabel(f"RAM: {self.main_window.system_info.get('ram', 'N/A')}"); procesador_label = QLabel(f"Procesador: {self.main_window.system_info.get('cpu', 'N/A')}")
         gpu_label = QLabel(f"GPU: {self.main_window.system_info.get('gpu', 'N/A')}"); cuda_label = QLabel(f"Versión CUDA: {self.main_window.system_info.get('cuda', 'N/A')}")
-        version_label = QLabel("Version: v0.1"); update_button = QPushButton("Acualizado")
+        version_label = QLabel("Version: v0.3"); update_button = QPushButton("Acualizado")
         main_layout.addLayout(top_bar_layout); main_layout.addSpacing(20); main_layout.addWidget(video_path_label); main_layout.addWidget(self.video_path_display); main_layout.addWidget(video_folder_button)
         main_layout.addSpacing(20); main_layout.addWidget(audio_path_label); main_layout.addWidget(self.audio_path_display); main_layout.addWidget(audio_folder_button)
         main_layout.addSpacing(20); main_layout.addWidget(separator); main_layout.addSpacing(10); main_layout.addWidget(caracteristicas_label); main_layout.addWidget(ram_label)
