@@ -21,12 +21,13 @@ def main():
 
         # Esperar a que el proceso principal termine
         try:
-            parent_process = psutil.Process(pid)
-            parent_process.wait(timeout=10)
+            if psutil.pid_exists(pid):
+                parent_process = psutil.Process(pid)
+                parent_process.wait(timeout=10)
         except psutil.NoSuchProcess:
             print("El proceso principal ya se ha cerrado.")
-        except (psutil.TimeoutExpired, Exception):
-            print("No se pudo confirmar el cierre del proceso principal. Continuando de todas formas.")
+        except (psutil.TimeoutExpired, Exception) as e:
+            print(f"No se pudo confirmar el cierre del proceso principal: {e}. Continuando de todas formas.")
 
         time.sleep(2)  # Dar un par de segundos extra para que se liberen los archivos
 
@@ -45,12 +46,11 @@ def main():
             source_path = os.path.join(source_dir, filename)
             target_path = os.path.join(target_dir, filename)
             
-            # No queremos que el updater se sobreescriba a sí mismo mientras se ejecuta
+            # No queremos que el updater se sobreescriba a sí mismo
             if filename.lower() == 'updater.py':
                 continue
                 
             try:
-                # Si el archivo ya existe en el destino, lo eliminamos primero
                 if os.path.exists(target_path):
                     os.remove(target_path)
                 shutil.move(source_path, target_path)
