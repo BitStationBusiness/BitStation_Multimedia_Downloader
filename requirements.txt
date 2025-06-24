@@ -3,3 +3,4 @@ requests
 numpy
 yt-dlp
 imageio-ffmpeg
+psutil
