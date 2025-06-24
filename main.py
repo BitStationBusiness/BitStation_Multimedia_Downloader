@@ -16,8 +16,25 @@ from PyQt6.QtWidgets import (
     QProgressBar, QFileDialog
 )
 
+# --- FUNCIÓN PARA LEER LA VERSIÓN ACTUAL ---
+def get_current_version():
+    """
+    Lee la versión actual desde version.txt. Si no existe,
+    lo crea con la versión inicial "0.0".
+    """
+    try:
+        with open("version.txt", "r") as f:
+            version = f.read().strip()
+            if not version: return "0.0" # Si el archivo está vacío
+            return version
+    except FileNotFoundError:
+        # Si el archivo no existe, es la primera ejecución.
+        with open("version.txt", "w") as f:
+            f.write("0.0")
+        return "0.0"
+
 # --- CONFIGURACIÓN DE LA APLICACIÓN Y ACTUALIZACIÓN ---
-APP_VERSION = "0.0"
+APP_VERSION = get_current_version()
 GITHUB_USER = "BitStationBusiness"
 GITHUB_REPO = "BitStation_Multimedia_Downloader"
 URL_REGEX = r'https?://[^\s/$.?#].[^\s]*'
@@ -80,6 +97,7 @@ class UpdateCheckerWorker(QObject):
             response.raise_for_status()
             data = response.json()
             latest_version = data['tag_name'].lstrip('v')
+            # Usar una librería de comparación de versiones sería más robusto, pero esto funciona para números simples
             if float(latest_version) > float(APP_VERSION):
                 update_info['update_available'] = True
                 update_info['latest_version'] = latest_version
@@ -239,7 +257,8 @@ class MainWindow(QMainWindow):
                 return
             
             pid = os.getpid()
-            subprocess.Popen([sys.executable, updater_script_path, str(pid)], creationflags=subprocess.DETACHED_PROCESS)
+            new_version = self.update_info.get('latest_version', '')
+            subprocess.Popen([sys.executable, updater_script_path, str(pid), new_version], creationflags=subprocess.DETACHED_PROCESS)
             
             self.close()
 

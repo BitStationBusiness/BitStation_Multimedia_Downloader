@@ -7,17 +7,20 @@ import psutil
 
 def main():
     """
-    Este script se encarga de reemplazar los archivos de la aplicación
-    y reiniciarla. Se ejecuta de forma independiente.
+    Este script se encarga de reemplazar los archivos de la aplicación,
+    actualizar el archivo de versión y reiniciarla.
     """
-    if len(sys.argv) < 2:
-        print("Error: No se proporcionó el PID del proceso principal.")
+    if len(sys.argv) < 3:
+        print("Error: No se proporcionó el PID del proceso principal y la nueva versión.")
         time.sleep(5)
         return
 
     try:
         pid = int(sys.argv[1])
-        print(f"Actualizador iniciado. Esperando a que el proceso principal (PID: {pid}) se cierre...")
+        new_version = sys.argv[2]
+        
+        print(f"Actualizador iniciado. Nueva versión a instalar: {new_version}")
+        print(f"Esperando a que el proceso principal (PID: {pid}) se cierre...")
 
         # Esperar a que el proceso principal termine
         try:
@@ -26,13 +29,12 @@ def main():
                 parent_process.wait(timeout=10)
         except psutil.NoSuchProcess:
             print("El proceso principal ya se ha cerrado.")
-        except (psutil.TimeoutExpired, Exception) as e:
+        except Exception as e:
             print(f"No se pudo confirmar el cierre del proceso principal: {e}. Continuando de todas formas.")
 
         time.sleep(2)  # Dar un par de segundos extra para que se liberen los archivos
 
         print("Proceso principal cerrado. Reemplazando archivos...")
-
         source_dir = "update_temp"
         target_dir = os.getcwd()
 
@@ -46,7 +48,7 @@ def main():
             source_path = os.path.join(source_dir, filename)
             target_path = os.path.join(target_dir, filename)
             
-            # No queremos que el updater se sobreescriba a sí mismo
+            # No queremos que el updater se sobreescriba a sí mismo mientras se ejecuta
             if filename.lower() == 'updater.py':
                 continue
                 
@@ -57,11 +59,15 @@ def main():
                 print(f" - '{filename}' actualizado.")
             except Exception as e:
                 print(f"  -> Error al reemplazar '{filename}': {e}")
-
+        
+        # --- PASO CLAVE: Escribir la nueva versión en el archivo ---
+        print(f"Actualizando el archivo de versión a '{new_version}'...")
+        with open("version.txt", "w") as f:
+            f.write(new_version)
+        print("Archivo de versión actualizado.")
 
         print("\nArchivos actualizados. Reiniciando la aplicación...")
         
-        # Eliminar la carpeta temporal
         try:
             shutil.rmtree(source_dir)
         except Exception as e:
